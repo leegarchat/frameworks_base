@@ -138,4 +138,7 @@
 
     <!-- Force Fullscreen apps -->
     <java-symbol type="array" name="config_fullscreenCutoutApps" />
+
+    <!-- Bootleg unneccesary gradient declaration | Just for our shishu bars -->
+    <java-symbol type="color" name="bootleg_accent_gradient_end_color" />
 </resources>
