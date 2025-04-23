@@ -1044,4 +1044,6 @@ interface IActivityManager {
     IBinder refreshIntentCreatorToken(in Intent intent);
 
     boolean shouldForceLongScreen(in String packageName);
+
+    void releaseMemory(int minAdj, int maxKillCount, boolean includeUIProcesses, boolean skipCamera);
 }
