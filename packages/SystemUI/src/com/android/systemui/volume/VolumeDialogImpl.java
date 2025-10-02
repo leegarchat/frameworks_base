@@ -809,7 +809,7 @@ public class VolumeDialogImpl implements VolumeDialog, Dumpable,
 
         mExpandRowsView = mDialog.findViewById(R.id.expandable_indicator_container);
         mExpandRows = mDialog.findViewById(R.id.expandable_indicator);
-
+        
         if (isWindowGravityLeft()) {
             ViewGroup container = mDialog.findViewById(R.id.volume_dialog_container);
             setGravity(container, Gravity.LEFT);
@@ -2379,6 +2379,7 @@ public class VolumeDialogImpl implements VolumeDialog, Dumpable,
                 : Events.ICON_STATE_UNKNOWN;
 
         if (row.icon != null) {
+            if (isExpandableRowH(row)) setIconDirection(row.icon);
             if (iconEnabled) {
                 if (isRingStream) {
                     if (isRingVibrate) {
@@ -2433,6 +2434,15 @@ public class VolumeDialogImpl implements VolumeDialog, Dumpable,
         updateVolumeRowSliderH(row, enableSlider, vlevel);
         Trace.endSection();
         if (row.number != null) row.number.setText(Integer.toString(vlevel));
+    }
+
+    private void setIconDirection(ImageView... views) {
+        if (views == null) return;
+        for (ImageView v : views) {
+            if (v != null) {
+                v.setRotationY(isWindowGravityLeft() ? 0f : 180f);
+            }
+        }
     }
 
     private boolean isStreamMuted(final StreamState streamState) {
