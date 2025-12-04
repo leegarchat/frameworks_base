@@ -62,6 +62,13 @@ import com.android.systemui.util.sensors.ProximitySensor;
 import com.android.systemui.util.settings.SecureSettings;
 import com.android.systemui.util.wakelock.WakeLock;
 
+// --- 2T2W HOOK VARIABLES START ---
+import android.os.Handler;
+import android.os.Looper;
+import android.os.SystemProperties;
+import android.provider.Settings;
+// --- 2T2W HOOK VARIABLES END ---
+
 import java.io.PrintWriter;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -75,6 +82,13 @@ import javax.inject.Inject;
 public class DozeTriggers implements DozeMachine.Part {
 
     private static final String TAG = "DozeTriggers";
+    // --- 2T2W PATCH VARIABLES START ---
+	private static final String KEY_DOZE_DOUBLE_TAP_HOOK = "doze_double_tap_hook";
+    private static final long DOUBLE_TAP_TIMEOUT_MS = 400;
+    private boolean mDoubleTapPending = false;
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
+    private final Runnable mDoubleTapTimeoutRunnable = () -> mDoubleTapPending = false;
+	// --- 2T2W PATCH VARIABLES END ---
     private static final boolean DEBUG = DozeService.DEBUG;
 
     /** adb shell am broadcast -a com.android.systemui.doze.pulse com.android.systemui */
@@ -307,6 +321,23 @@ public class DozeTriggers implements DozeMachine.Part {
     @VisibleForTesting
     void onSensor(int pulseReason, boolean sensorPerformedProxCheck,
             float screenX, float screenY, float[] rawValues) {
+        // --- 2T2W PATCH LOGIC START ---
+        if (pulseReason == DozeLog.REASON_SENSOR_TAP || pulseReason == DozeLog.REASON_SENSOR_DOUBLE_TAP) {
+            boolean isHookEnabled = Settings.Secure.getInt( // <-- Изменено на Settings.System
+                    mContext.getContentResolver(), KEY_DOZE_DOUBLE_TAP_HOOK, 0) == 1;
+            if (isHookEnabled) {
+                if (!mDoubleTapPending) {
+                    mDoubleTapPending = true;
+                    mHandler.postDelayed(mDoubleTapTimeoutRunnable, DOUBLE_TAP_TIMEOUT_MS);
+                    mDozeSensors.reregisterTapSensor();
+                    return; 
+                } else {
+                    mDoubleTapPending = false;
+                    mHandler.removeCallbacks(mDoubleTapTimeoutRunnable);
+                }
+            }
+        }
+        // --- 2T2W PATCH LOGIC END ---
         boolean isDoubleTap = pulseReason == DozeLog.REASON_SENSOR_DOUBLE_TAP;
         boolean isTap = pulseReason == DozeLog.REASON_SENSOR_TAP;
         boolean isPickup = pulseReason == DozeLog.REASON_SENSOR_PICKUP;
