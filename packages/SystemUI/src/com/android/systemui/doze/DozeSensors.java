@@ -1024,5 +1024,17 @@ public class DozeSensors {
          */
         void onSensorPulse(int pulseReason, boolean sensorPerformedProxCheck,
                 float screenX, float screenY, float[] rawValues);
+    };
+    // --- 2T2W PATCH START ---
+    public void reregisterTapSensor() {
+        for (TriggerSensor s : mTriggerSensors) {
+            // Ищем сенсор, отвечающий за одиночный тап (обычно это 9)
+            if (s.mPulseReason == DozeLog.REASON_SENSOR_TAP) {
+                // Принудительно обновляем статус слушателя
+                s.updateListening();
+                break;
+            }
+        }
     }
+    // --- 2T2W PATCH END ---
 }
